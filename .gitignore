@@ -1,0 +1,12 @@
+__pycache__/
+.vscode/
+
+*.svs
+**/*.npy
+*.csv
+*.txt
+*.tsv
+*.xlsx
+*.xml
+*.mrxs
+*.pth
