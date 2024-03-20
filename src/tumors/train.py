@@ -43,6 +43,16 @@ def save_params(PARAMS, PATH_SUMMARY_DATA, PATH_FEATURES_DIR, export_path):
         f.write("PATH_FEATURES_DIR = " + str(PATH_FEATURES_DIR) + "\n")
         f.write("export_path = " + str(export_path) + "\n")
 
+def save_splits(export_path, train_ids_cv, val_ids_cv):
+    train_patient = {}
+    val_patient = {}
+    for split in train_ids_cv:
+        train_patient[split] = np.unique(train_ids_cv[split])
+        val_patient[split] = np.unique(val_ids_cv[split])
+    with open(export_path / "splits.txt", "w", encoding="utf-8") as f:
+        f.write("train_patient = " + str(train_patient) + "\n")
+        f.write("val_patient = " + str(val_patient) + "\n")
+
 
 def main():
 
@@ -86,6 +96,7 @@ def main():
         use_cross_val=PARAMS["use_cross_val"],
         use_multicentric=PARAMS["use_multicentric"],
     )
+    save_splits(export_path, train_ids_cv, val_ids_cv)
     # del X_, X_slidenames_, X_ids_
     print("\nStarting training :")
 
