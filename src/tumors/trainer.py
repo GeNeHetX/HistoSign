@@ -1,11 +1,3 @@
-"""
-Copyright (c) Owkin Inc.
-This source code is licensed under the GNU GENERAL PUBLIC LICENSE v3 license found in the
-LICENSE file in the root directory of this source tree.
-
-Trainer for Basal/Classic prediction (PACpAInt-B/C).
-"""
-
 from typing import Tuple
 from tqdm import tqdm
 import numpy as np
