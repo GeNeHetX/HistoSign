@@ -19,7 +19,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def display_wsi(img, final_mask, coord_thumb, df_tiles):
+def display_wsi(img, final_mask, coord_thumb, df_tiles, name="WSI display"):
     """Show the WSI with the segmentation mask and the tiles predictions in
     an interactive way.
 
@@ -31,6 +31,7 @@ def display_wsi(img, final_mask, coord_thumb, df_tiles):
                             as the variable img, ie in the 'thumbnail' space.
     df_tiles (pd.DataFrame) : (N, P) dataframe containing the predictions of the tiles. The first two columns are the
                             coordinates of the tiles (in the WSI space) and the rest are the predictions of the tiles. (P>=3). df_tiles includes the tumor predictions.
+    name (str)              : name of the figure
     """
 
     threshold_sign_default = 0.0
@@ -50,7 +51,7 @@ def display_wsi(img, final_mask, coord_thumb, df_tiles):
         .DDD."""
 
     # fig = plt.figure(layout="constrained", num="WSI display")
-    fig = plt.figure(num="WSI display", layout="tight")
+    fig = plt.figure(num=name, layout="tight")
     axd = fig.subplot_mosaic(mosaic)
 
     axd["A"].imshow(img)
