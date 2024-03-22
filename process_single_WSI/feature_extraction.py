@@ -59,7 +59,7 @@ def parse_args():
     parser.add_argument(
         "--model",
         type=str,
-        default="vit",
+        default="ctrans",
         help="Model to use for the feature extraction",
         choices=["vit", "cnn", "ctrans"],
     )
@@ -264,6 +264,7 @@ def extract_features(
     num_workers: int = 0,
     prefetch_factor: int = None,
     save_folder: Path = None,
+    filename: str = "features.npy",
 ):
     assert (
         tiles_coords_path is not None or tiles_coords is not None
@@ -312,6 +313,6 @@ def extract_features(
     # resolution, the 2nd and 3rd are the coordinates of the tile, and the rest are the features
 
     if save_folder is not None:
-        np.save(save_folder / f"{slide_path.stem}" / "features.npy", features)
+        np.save(save_folder / f"{slide_path.stem}" / filename, features)
 
     return features
