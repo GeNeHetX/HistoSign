@@ -38,7 +38,8 @@ def parse_arg():
     parser.add_argument(
         "--wsi",
         type=Path,
-        default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\MDN\12AG00001-14_MDNF01_HES.svs"),
+        # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\MDN\12AG00001-14_MDNF01_HES.svs"),
+        default=Path(r"D:\PACPaint_homemade\datasets\BJN_U\364842-06.svs"),
         help="Path to the WSI. Can be a .svs, .ndpi, .qptiff",
     )
     parser.add_argument(
@@ -51,7 +52,7 @@ def parse_arg():
         "--model_tum_path",
         type=Path,
         default=Path(
-            r"C:\Users\inserm\Documents\histo_sign\trainings\tumors\2024-03-19_14-28-04\split_0\model.pth"
+            r"D:\PACPaint_homemade\pacpaint_tb\..\trainings\neo_cell_type\2024-02-19_09-44-31\split_21\model.pth"
         ),
         help="Path to the tumor model",
     )
@@ -84,16 +85,29 @@ def main(args):
     )
 
     print("Extracting features...")
-    # features = extract_features(
-    #     args.wsi,
-    #     model_key="ctrans",
-    #     device=args.device,
-    #     tiles_coords=tiles_coord,
-    #     num_workers=args.num_workers,
-    #     save_folder=args.temp_dir,
-    #     batch_size=args.batch_size,
-    # )
+    if not (args.temp_dir / slidename / "features.npy").exists():
+        features = extract_features(
+            args.wsi,
+            model_key="ctrans",
+            device=args.device,
+            tiles_coords=tiles_coord,
+            num_workers=args.num_workers,
+            save_folder=args.temp_dir,
+            batch_size=args.batch_size,
+        )
+    if not (args.temp_dir / slidename / "features_tum.npy").exists():
+        features_tum = extract_features(
+            args.wsi,
+            model_key="cnn",
+            device=args.device,
+            tiles_coords=tiles_coord,
+            num_workers=args.num_workers,
+            save_folder=args.temp_dir,
+            batch_size=args.batch_size,
+            filename="features_tum.npy",
+        )
     features = np.load(args.temp_dir / slidename / "features.npy")
+    features_tum = np.load(args.temp_dir / slidename / "features_tum.npy")
 
     print("Predicting signatures...")
     x, coord = features[:, 3:], features[:, 1:3]
@@ -108,7 +122,9 @@ def main(args):
         df_wsi = pd.concat([df_wsi, _df_wsi], axis=1)
         df_tiles = pd.merge(df_tiles, _df_tiles, on=["x", "y"], how="outer")
 
-    # tumor prediction
+    print("Predicting tumor...")
+    x, coord = features_tum[:, 3:], features_tum[:, 1:3]
+    x = torch.from_numpy(x).unsqueeze(0).float()
     _df_tum = tum_pred(x, coord, args.model_tum_path, args.device)
     df_tiles = pd.merge(df_tiles, _df_tum, on=["x", "y"], how="outer")
 
@@ -123,6 +139,7 @@ def main(args):
             final_mask,
             coord_thumb,
             df_tiles,
+            name=slidename,
         )
 
 
