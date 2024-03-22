@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from sklearn.model_selection import GroupKFold
+from joblib import Parallel, delayed
 
 
 class SignaturetDataset:
@@ -169,7 +170,7 @@ class SignaturetDataset:
         self,
         labels: pd.Series,
         use_cross_val: bool = True,
-        use_multicentric: bool = False,
+        # use_multicentric: bool = False,
     ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
         """Compute cross validation split for the dataset. Uses GroupKFold to ensure that the same patient is not present in both the train and validation set."""
 
@@ -180,15 +181,15 @@ class SignaturetDataset:
             cv_val_ids["split_0"] = labels.index.values
             return cv_train_ids, cv_val_ids
 
-        if use_multicentric:
-        # basically get training as DISC and validation as BJN_U
-            df_disc = self.df[self.df.cohort == "DISC"]
-            df_bjn_u = self.df[self.df.cohort == "BJN_U"]
-            train_idx = labels.index.isin(df_disc.patient_ID)
-            val_idx = labels.index.isin(df_bjn_u.patient_ID)
-            cv_train_ids["split_0"] = labels.index[train_idx].values.squeeze()
-            cv_val_ids["split_0"] = labels.index[val_idx].values.squeeze()
-            return cv_train_ids, cv_val_ids
+        # if use_multicentric:
+        # # basically get training as DISC and validation as BJN_U
+        #     df_disc = self.df[self.df.cohort == "DISC"]
+        #     df_bjn_u = self.df[self.df.cohort == "BJN_U"]
+        #     train_idx = labels.index.isin(df_disc.patient_ID)
+        #     val_idx = labels.index.isin(df_bjn_u.patient_ID)
+        #     cv_train_ids["split_0"] = labels.index[train_idx].values.squeeze()
+        #     cv_val_ids["split_0"] = labels.index[val_idx].values.squeeze()
+        #     return cv_train_ids, cv_val_ids
 
         gkf = GroupKFold(n_splits=5)
         for i, (train_idx, val_idx) in enumerate(gkf.split(labels, labels, groups)):
@@ -196,3 +197,88 @@ class SignaturetDataset:
             cv_val_ids[f"split_{i}"] = labels.iloc[val_idx].index.values.squeeze()
 
         return cv_train_ids, cv_val_ids
+
+    def _process_row(self, row, n_tiles):
+        path_coord = self.PATH_TUM_ANNOT / row["sample_ID"] / "tiles_coord.npy"
+        path_feat = self.PATH_FEATURES_DIR / row["sample_ID"] / "features.npy"
+
+        coord = np.load(path_coord, allow_pickle=True).astype(int)[:, [0, 2, 3, 4]]
+        features = np.load(path_feat, allow_pickle=True, mmap_mode="r").astype(np.float32)
+
+        # sample the data
+        if features.shape[0] < n_tiles:
+            print(
+                f"Warning: {row['sample_ID']} has less than {n_tiles} tiles, only {len(features)} tiles will be used."
+            )
+        else:
+            # sampled_idx = np.random.choice(features.shape[0], n_tiles, replace=False)
+            # features = features[sampled_idx]
+            features = features[:, :n_tiles]
+
+        mapped_feat, mapped_annot, mapped_ids = [], [], []
+        for feat in features:
+            z, x, y = feat[:3]
+            idx = np.where((coord[:, 0] == z) & (coord[:, 1] == x) & (coord[:, 2] == y))[0]
+            if len(idx) == 0:
+                print(f"Warning: tile {z,x,y} not found in {row['sample_ID']}")
+                raise ValueError
+            else:
+                mapped_feat.append(feat)
+                mapped_annot.append(coord[idx, 3])
+                mapped_ids.append(row["sample_ID"])
+
+        if len(mapped_feat) == 0:
+            return None, None, None
+        else:
+            return np.array(mapped_feat), np.concatenate(mapped_annot, 0), mapped_ids
+
+    def get_rows_datas(self, rows, n_tiles, njobs=4):
+        X, y, ids = [], [], []
+        results = Parallel(n_jobs=njobs)(
+            delayed(self._process_row)(row, n_tiles)
+            for _, row in tqdm(rows.iterrows(), total=len(rows), desc="Processing rows")
+        )
+        # results = [process_row(row, params) for _, row in tqdm(rows.iterrows(), total=len(rows), desc="Processing rows")]
+        for x, y_, id_ in results:
+            if x is not None:
+                X.append(x)
+                y.append(y_)
+                ids.extend(id_)
+        return np.concatenate(X, 0), np.concatenate(y, 0), ids
+
+    def get_data_tumors(self, n_tiles, njobs=4):
+        """
+        Get the data for the tumors segmentation task.
+        We assume that the training data are given by the rows of the dataframe df whose cohort
+        is `DISC` and the validation data are given by the rows of the dataframe df whose cohort
+        is `BJN_U`.
+
+        Parameters
+        ----------
+        n_tiles : int
+            Number of tiles to sample per slide
+        njobs : int
+            Number of jobs to run in parallel
+
+        Returns
+        -------
+        X_train : np.ndarray
+            Features of the training set
+        y_train : np.ndarray
+        ids_train : list
+            List of the patient ids of the training set
+
+        X_val : np.ndarray
+            Features of the validation set
+        y_val : np.ndarray
+        ids_val : list
+            List of the patient ids of the validation set
+        """
+
+        rows_train = self.df[self.df.cohort == "DISC"]
+        rows_val = self.df[self.df.cohort == "BJN_U"]
+
+        X_train, y_train, ids_train = self.get_rows_datas(rows_train, n_tiles, njobs)
+        X_val, y_val, ids_val = self.get_rows_datas(rows_val, n_tiles, njobs)
+
+        return X_train, y_train, ids_train, X_val, y_val, ids_val
