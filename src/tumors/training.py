@@ -149,11 +149,14 @@ def main():
         torch.save(model.state_dict(), export_path / "model.pth")
     pbar.close()
 
-
     # Last final evaluation
     print("Training finished. Evaluating final model...")
-    val_auc, val_loss = eval(model, criterion, dataloader_val, device=PARAMS["device"])
-    auc_train, train_loss = eval(model, criterion, dataloader, device=PARAMS["device"])
+    val_auc, val_loss = eval(
+        model, criterion, dataloader_val, device=PARAMS["device"], with_progess="Validation"
+    )
+    auc_train, train_loss = eval(
+        model, criterion, dataloader, device=PARAMS["device"], with_progess="Training"
+    )
     loss_train_list.append(loss_train.cpu().item())
     val_loss_list.append(val_loss)
     auc_train_list.append(auc_train)
@@ -176,6 +179,11 @@ def main():
     res_df.to_csv(export_path / "results.csv", index=False)
 
     torch.save(model.state_dict(), export_path / "model.pth")
+    np.save(export_path / "loss_train.npy", np.array(loss_train_list))
+    np.save(export_path / "val_loss.npy", np.array(val_loss_list))
+    np.save(export_path / "auc_train.npy", np.array(auc_train_list))
+    np.save(export_path / "val_auc.npy", np.array(val_auc_list))
+
 
     print(f"End time: {datetime.now()}. Finished in {datetime.now() - start_time}")
 
@@ -188,6 +196,10 @@ def main():
         axes[1, 0].plot(auc_train_list)
         axes[1, 0].set_title("Train AUC")
         axes[1, 1].plot(val_auc_list)
+        axes[1, 1].set_title("Val AUC")
+        plt.tight_layout()
+        plt.savefig(export_path / "metrics.png")
+        plt.show()
 
 
 def eval(
@@ -195,12 +207,19 @@ def eval(
     criterion: torch.nn.Module,
     dataloader: DataLoader,
     device="cuda:0",
+    with_progess: str = None,
 ):
 
     model.eval()
     with torch.no_grad():
+        
+        if with_progess is not None:
+            pbar = tqdm(dataloader, desc=with_progess, total=len(dataloader), unit="batch")
+        else:
+            pbar = dataloader
+
         y, y_hat, logits = [], [], []
-        for x_b, y_b in dataloader:
+        for x_b, y_b in pbar:
             logits_b = model(x_b.to(device)).squeeze()
             pred_b = torch.sigmoid(logits_b).squeeze()
             y.append(y_b)
