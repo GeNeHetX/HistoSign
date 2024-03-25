@@ -223,7 +223,7 @@ class SignaturetDataset:
                 print(f"Warning: tile {z,x,y} not found in {row['sample_ID']}")
                 raise ValueError
             else:
-                mapped_feat.append(feat)
+                mapped_feat.append(feat[3:])
                 mapped_annot.append(coord[idx, 3])
                 mapped_ids.append(row["sample_ID"])
 
