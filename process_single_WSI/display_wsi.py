@@ -85,11 +85,12 @@ def display_wsi(img, final_mask, coord_thumb, df_tiles, name="WSI display"):
     axd["D"].scatter(
         coord_thumb[valid_pts, 0, 0],
         coord_thumb[valid_pts, 0, 1],
-        c="b",
-        s=5,
+        # c="b",
+        s=2,
+        cmap="viridis",
+        c=df_tiles[class_name][valid_pts],
     )
     axd["D"].imshow(img)
-    axd["D"].set_title(f"Class {class_name} with threshold_sign {threshold_sign_default}")
 
     for ax in ["A", "B", "D", "F"]:
         axd[ax].set_aspect("equal")
@@ -154,7 +155,14 @@ def display_wsi(img, final_mask, coord_thumb, df_tiles, name="WSI display"):
 
         axd["D"].clear()
         axd["D"].imshow(img)
-        axd["D"].scatter(coord_thumb[valid_pts, 0, 0], coord_thumb[valid_pts, 0, 1], c="b", s=5)
+        # axd["D"].scatter(coord_thumb[valid_pts, 0, 0], coord_thumb[valid_pts, 0, 1], c="b", s=2)
+        axd["D"].scatter(
+            coord_thumb[valid_pts, 0, 0],
+            coord_thumb[valid_pts, 0, 1],
+            c=df_tiles[class_name][valid_pts],
+            s=5,
+            cmap="viridis",
+        )
         axd["D"].set_aspect("equal")
         axd["D"].set_axis_off()
 
