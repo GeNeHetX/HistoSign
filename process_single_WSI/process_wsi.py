@@ -1,14 +1,3 @@
-import os
-
-# Demerdez-vous pour installer openslide sur votre machine
-OPENSLIDE_PATH = r"D:\DataManage\openslide-win64-20231011\bin"
-if hasattr(os, "add_dll_directory"):
-    # Windows
-    with os.add_dll_directory(OPENSLIDE_PATH):
-        import openslide
-else:
-    import openslide
-
 from display_wsi import display_wsi
 
 from pathlib import Path
@@ -38,7 +27,6 @@ def parse_arg():
     parser.add_argument(
         "--wsi",
         type=Path,
-        # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\MDN\12AG00001-14_MDNF01_HES.svs"),
         default=Path(r"D:\PACPaint_homemade\datasets\BJN_U\364842-06.svs"),
         help="Path to the WSI. Can be a .svs, .ndpi, .qptiff",
     )
@@ -51,9 +39,7 @@ def parse_arg():
     parser.add_argument(
         "--model_tum_path",
         type=Path,
-        default=Path(
-            r"D:\PACPaint_homemade\pacpaint_tb\..\trainings\neo_cell_type\2024-02-19_09-44-31\split_21\model.pth"
-        ),
+        default=Path(r"C:\Users\inserm\Documents\histo_sign\trainings\tumors\2024-03-25_11-12-38\model.pth"),
         help="Path to the tumor model",
     )
     parser.add_argument(
@@ -95,24 +81,12 @@ def main(args):
             save_folder=args.temp_dir,
             batch_size=args.batch_size,
         )
-    if not (args.temp_dir / slidename / "features_tum.npy").exists():
-        features_tum = extract_features(
-            args.wsi,
-            model_key="cnn",
-            device=args.device,
-            tiles_coords=tiles_coord,
-            num_workers=args.num_workers,
-            save_folder=args.temp_dir,
-            batch_size=args.batch_size,
-            filename="features_tum.npy",
-        )
     features = np.load(args.temp_dir / slidename / "features.npy")
-    features_tum = np.load(args.temp_dir / slidename / "features_tum.npy")
 
-    print("Predicting signatures...")
     x, coord = features[:, 3:], features[:, 1:3]
     x = torch.from_numpy(x).unsqueeze(0).float()
 
+    print("Predicting signatures...")
     model_paths_dict = np.load(args.model_sign_path, allow_pickle=True).item()
 
     df_wsi = pd.DataFrame()
@@ -123,8 +97,6 @@ def main(args):
         df_tiles = pd.merge(df_tiles, _df_tiles, on=["x", "y"], how="outer")
 
     print("Predicting tumor...")
-    x, coord = features_tum[:, 3:], features_tum[:, 1:3]
-    x = torch.from_numpy(x).unsqueeze(0).float()
     _df_tum = tum_pred(x, coord, args.model_tum_path, args.device)
     df_tiles = pd.merge(df_tiles, _df_tum, on=["x", "y"], how="outer")
 

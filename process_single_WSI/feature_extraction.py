@@ -10,7 +10,6 @@ else:
     import openslide
 import numpy as np
 import openslide
-import pandas as pd
 import torch
 from openslide.deepzoom import DeepZoomGenerator
 from torch.utils.data import DataLoader, Dataset
