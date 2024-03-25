@@ -27,8 +27,7 @@ PARAMS = {
     "batch_size": 4096,
     "n_ep": 5,
     "lr": 1.0e-4,
-    # "n_tiles": 8_000,
-    "n_tiles": 20,
+    "n_tiles": 8_000,
     "n_workers": 0,
     "wd": 0,
     "device": "cuda:0",
@@ -140,37 +139,37 @@ def main():
                 refresh=True,
             )
             pbar.update(1)
-            # break
 
         val_auc, val_loss = eval(model, criterion, dataloader_val, device=PARAMS["device"])
 
-        loss_train_list.append(loss_train)
+        loss_train_list.append(loss_train.cpu().item())
         val_loss_list.append(val_loss)
         auc_train_list.append(auc_train)
         val_auc_list.append(val_auc)
         torch.save(model.state_dict(), export_path / "model.pth")
+    pbar.close()
 
 
     # Last final evaluation
+    print("Training finished. Evaluating final model...")
     val_auc, val_loss = eval(model, criterion, dataloader_val, device=PARAMS["device"])
-    train_auc, train_loss = eval(model, criterion, dataloader, device=PARAMS["device"])
-    loss_train_list.append(loss_train)
+    auc_train, train_loss = eval(model, criterion, dataloader, device=PARAMS["device"])
+    loss_train_list.append(loss_train.cpu().item())
     val_loss_list.append(val_loss)
-    auc_train_list.append(train_auc)
+    auc_train_list.append(auc_train)
     val_auc_list.append(val_auc)
     pbar.set_description(
         f"Epoch[{epoch}]: val_loss : {val_loss:.2f}, val_auc: {val_auc:.2f}, train_auc: {auc_train:.2f}, loss_train: {loss_train:.2f}",
         refresh=True,
     )
-    pbar.close()
     print(f"Final val_auc: {val_auc:.2f}, val_loss: {val_loss:.2f}")
-    print(f"Final train_auc: {train_auc:.2f}, train_loss: {train_loss:.2f}")
+    print(f"Final train_auc: {auc_train:.2f}, train_loss: {train_loss:.2f}")
 
     # Save model and its metric
     res_dict = {
         "val_auc": val_auc,
         "val_loss": val_loss,
-        "train_auc": train_auc,
+        "train_auc": auc_train,
         "train_loss": train_loss,
     }
     res_df = pd.DataFrame(res_dict, index=[0])
