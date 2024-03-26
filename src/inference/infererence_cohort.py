@@ -21,7 +21,7 @@ def parse_arg():
     parser.add_argument(
         "--export_dir",
         type=Path,
-        default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\inference_mdn"),
+        default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\inference_panc"),
         help="Path to the directory where the results will be saved",
         required=False,
     )
