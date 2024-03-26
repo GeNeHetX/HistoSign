@@ -25,8 +25,8 @@ print("Saving results at \n", export_path, "\n")
 
 PARAMS = {
     "batch_size": 4096,
-    "n_ep": 5,
-    "lr": 1.0e-4,
+    "n_ep": 20,
+    "lr": 5.0e-5,
     "n_tiles": 8_000,
     "n_workers": 0,
     "wd": 0,
@@ -184,7 +184,6 @@ def main():
     np.save(export_path / "auc_train.npy", np.array(auc_train_list))
     np.save(export_path / "val_auc.npy", np.array(val_auc_list))
 
-
     print(f"End time: {datetime.now()}. Finished in {datetime.now() - start_time}")
 
     if PARAMS["display"]:
@@ -212,7 +211,7 @@ def eval(
 
     model.eval()
     with torch.no_grad():
-        
+
         if with_progess is not None:
             pbar = tqdm(dataloader, desc=with_progess, total=len(dataloader), unit="batch")
         else:
