@@ -43,7 +43,9 @@ def parse_args():
     parser.add_argument(
         "--log_file_path",
         type=Path,
-        default=r"C:\Users\inserm\Documents\histo_sign\dataset\log_filter_whites_" + datetime.now().strftime("%Y%m%d") + ".txt",
+        default=r"C:\Users\inserm\Documents\histo_sign\dataset\log_filter_whites_"
+        + datetime.now().strftime("%Y%m%d")
+        + ".txt",
         help="Path to the log file containing the paths to the slides already processed",
     )
     parser.add_argument(
@@ -102,9 +104,8 @@ class TilesExtractorDataset(Dataset):
 def filter_whites(path_svs, tile_size=224, log_file_path=None, folder_path=None, thumb_size=(1000, 1000)):
     """
     Extract the coordinates of the tiles that are not white in the thumbnail of the WSI.
-    We use 
+    We use
     """
-    
 
     slide = openslide.OpenSlide(path_svs)
     slide_dt = TilesExtractorDataset(slide, tile_size=tile_size)
@@ -128,16 +129,18 @@ def filter_whites(path_svs, tile_size=224, log_file_path=None, folder_path=None,
     w_ratio = w_thumb / w_slide
     h_ratio = h_thumb / h_slide
 
-    all_tiles_coord = [[z, k, i, j] for k, i, j in zip(range(len(slide_dt)), *slide_dt.idx_to_ij(range(len(slide_dt))))]
+    all_tiles_coord = [
+        [z, k, i, j] for k, i, j in zip(range(len(slide_dt)), *slide_dt.idx_to_ij(range(len(slide_dt))))
+    ]
     all_tiles_coord = np.array(all_tiles_coord)
     # Get the coordinates of the tiles in the thumbnail
     coord_thumb = np.zeros((all_tiles_coord.shape[0], 4, 2), dtype=np.int32)
     for k in tqdm(range(all_tiles_coord.shape[0])):
         # Convert tile adress to pixel coordinates in the full resolution image
         i, j = all_tiles_coord[k, 2] * tile_size, all_tiles_coord[k, 3] * tile_size
-        corners = np.array([[i, j], [i + tile_size, j], [i, j + tile_size], [i + tile_size, j + tile_size]]).astype(
-            np.float32
-        )
+        corners = np.array(
+            [[i, j], [i + tile_size, j], [i, j + tile_size], [i + tile_size, j + tile_size]]
+        ).astype(np.float32)
         # Map the coordinates of the pixels i,j to the coordinates on the thumbnail
         corners[:, 0] *= h_ratio
         corners[:, 1] *= w_ratio
@@ -155,9 +158,12 @@ def filter_whites(path_svs, tile_size=224, log_file_path=None, folder_path=None,
 
     if folder_path is not None:
         slide_name = Path(path_svs).stem
-        export_path = folder_path / f"{slide_name}" / "tiles_coord.npy"
-        export_path.parent.mkdir(parents=True, exist_ok=True)
-        np.save(export_path, tiles_coord)
+        export_path = folder_path / f"{slide_name}"
+        export_path.mkdir(parents=True, exist_ok=True)
+        np.save(export_path / "coord_thumb.npy", coord_thumb)
+        np.save(export_path / "final_mask.npy", final_mask)
+        np.save(export_path / "img.npy", img)
+        np.save(export_path / "tiles_coord.npy", tiles_coord)
 
     if log_file_path is not None:
         # log the path as completed
@@ -185,7 +191,7 @@ if __name__ == "__main__":
 
     def custom_iter():
         for path_svs in list_of_path_svs:
-            yield path_svs, args.tile_size,args.log_file_path, args.folder_path
+            yield path_svs, args.tile_size, args.log_file_path, args.folder_path
 
     it = custom_iter()
     with Pool(6) as p:

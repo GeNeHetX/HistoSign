@@ -12,7 +12,7 @@ def parse_args():
     parser.add_argument(
         "--dir",
         type=Path,
-        default=Path(r"C:\Users\inserm\Documents\histo_sign\temp_folder\12AG00001-14_MDNF01_HES"),
+        default=Path(r"C:\Users\inserm\Documents\histo_sign\temp_folder\364842-06"),
         help="Path to the directory where the infos are saved",
         required=False,
     )
@@ -29,14 +29,14 @@ def display_wsi(img, final_mask, coord_thumb, df_tiles, name="WSI display"):
     coord_thumb (np.ndarray): (N, 4, 2) coordinates of the tiles in the WSI. Each tile is represented by its 4 corners.
                             Only the first corner is used to display the tiles. The coordinates should be in the space
                             as the variable img, ie in the 'thumbnail' space.
-    df_tiles (pd.DataFrame) : (N, P) dataframe containing the predictions of the tiles. The first two columns are the
-                            coordinates of the tiles (in the WSI space) and the rest are the predictions of the tiles. (P>=3). df_tiles includes the tumor predictions.
+    df_tiles (pd.DataFrame) : (N, P) dataframe containing the predictions of the tiles. The first three columns are the
+                            coordinates of the tiles [z,x,y] (in the WSI space) and the rest are the predictions of the tiles. (P>=4). df_tiles includes the tumor predictions.
     name (str)              : name of the figure
     """
 
     threshold_sign_default = 0.0
     threshold_tum_default = 0.5
-    class_name = df_tiles.columns[2:][0]
+    class_name = df_tiles.columns[3:][0]
     num_bins = 40
 
     valid_pts = np.argwhere(df_tiles[class_name] > threshold_sign_default).squeeze()
@@ -98,8 +98,8 @@ def display_wsi(img, final_mask, coord_thumb, df_tiles, name="WSI display"):
 
     # Initialize the interactive elements
     # radio buttons to change the class
-    ax_classname = plt.axes([0.01, 0.15, 0.25, len(df_tiles.columns[2:]) * 0.025])
-    radio = RadioButtons(ax_classname, df_tiles.columns[2:], active=0)
+    ax_classname = plt.axes([0.01, 0.15, 0.25, len(df_tiles.columns[3:]) * 0.025])
+    radio = RadioButtons(ax_classname, df_tiles.columns[3:], active=0)
 
     #  button to choose to display the tumor or not
     ax_tumor = plt.axes([0.01, 0.05, 0.15, 2 * 0.025])
@@ -111,8 +111,8 @@ def display_wsi(img, final_mask, coord_thumb, df_tiles, name="WSI display"):
     slider_tresh = Slider(
         ax_tresh,
         "Signature",
-        df_tiles.drop(columns=["x", "y"]).min().min(),
-        df_tiles.drop(columns=["x", "y"]).max().max(),
+        df_tiles.drop(columns=["z", "x", "y"]).min().min(),
+        df_tiles.drop(columns=["z", "x", "y"]).max().max(),
         valinit=threshold_sign_default,
         orientation="vertical",
     )
