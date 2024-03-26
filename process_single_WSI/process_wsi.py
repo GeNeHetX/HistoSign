@@ -42,7 +42,7 @@ def parse_arg():
     parser.add_argument(
         "--model_tum_path",
         type=Path,
-        default=Path(r"C:\Users\inserm\Documents\histo_sign\trainings\tumors\2024-03-25_11-12-38\model.pth"),
+        default=Path(r"C:\Users\inserm\Documents\histo_sign\trainings\tumors\2024-03-25_14-43-57\model.pth"),
         help="Path to the tumor model",
     )
     parser.add_argument(
