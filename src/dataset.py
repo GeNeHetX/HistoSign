@@ -16,6 +16,26 @@ class SignaturetDataset:
         PATH_TUM_ANNOT: Path = None,
         col_name: str = None,
     ) -> None:
+        """
+        Dataset class for signature prediction and tumor segmentation tasks.
+
+        Parameters
+        ----------
+        PATH_SUMMARY_DATA : Path
+            Path to the dataframe containing the summary data. Must contain the columns `patient_ID` and `sample_ID` as well as the signature columns.
+        PATH_FEATURES_DIR : Path
+            Path to the directory containing the features of the tiles. The features must be stored in a numpy array with the shape (n_tiles, n_features), 
+            be named `features.npy` and be stored in a subdirectory named after the `sample_ID`.
+        PATH_COL_SIGNS : Path, optional
+            Path to the file containing the column names of the molecular signatures. If not provided, only the Classic and Basal components will be used.
+        PATH_TUM_ANNOT : Path, optional
+            Path to the tumor annotation file. Used for the tumor segmentation task. The file must be stored in a subdirectory named after the `sample_ID` and be named `tiles_coord.npy`. 
+            The file must contain the columns `z`, `k`, `x`, `y` and `tum`.
+        col_name : str, optional
+            Column name of the molecular signature to use. If not provided, only the Classic and Basal components will be used.
+        ------
+
+        """
         self.df = pd.read_csv(PATH_SUMMARY_DATA)
         try:
             self.df = self.df.dropna(
@@ -24,9 +44,6 @@ class SignaturetDataset:
         except KeyError:
             pass
         assert self.df.isna().any().any() == False, "There are NaN values in the dataset"
-        # Uncomment the next two line if on Windows
-        # self.df.path_svs = self.df.path_svs.apply(lambda x: "D:/" / Path("/".join(x.split("/")[3:])))
-        # self.df.path_xml = self.df.path_xml.apply(lambda x: "D:/" / Path("/".join(x.split("/")[3:])))
         self.df.index = self.df.patient_ID
         self.df.sort_index(inplace=True)
 
@@ -54,6 +71,7 @@ class SignaturetDataset:
             - "short": returns only the Classic and Basal components
             - "normal": returns the Classic, StromaActiv, Basal and StromaInactive components
             - "long": returns all the components
+            - "custom": returns the component specified in the `col_name` attribute
         """
 
         assert return_val in [
@@ -114,7 +132,27 @@ class SignaturetDataset:
         self,
         n_tiles: int = 10_000,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """Loads features for each slide."""
+        """
+        Loads features for each slide.
+
+        Parameters
+        ----------
+        n_tiles : int, default=10_000
+            Number of tiles to sample per slide
+
+        Returns
+        -------
+        features : np.ndarray
+            Features of the tiles
+        coordinates : np.ndarray
+            Coordinates of the tiles
+        slidenames : np.ndarray
+            Names of the slides
+        patient_ids : np.ndarray
+            Patient ids
+
+
+        """
         features_paths = list(self.PATH_FEATURES_DIR.glob("*/features.npy"))
 
         features = pd.DataFrame(features_paths, columns=["path"])
@@ -139,8 +177,10 @@ class SignaturetDataset:
             patient_id = row.patient_ID
             # x = np.load(row.path, mmap_mode="r")[:n_tiles].copy()
 
-            x_temp = np.load(row.path, mmap_mode="r")
             # random sampling of the tiles, if possible
+            # Remark : this is rather slow because of random sampling inducing random access to the file
+            # To disbale random sampling, just comment the following lines and uncomment the line above
+            x_temp = np.load(row.path, mmap_mode="r")
             if x_temp.shape[0] > n_tiles:
                 idx = np.random.choice(x_temp.shape[0], n_tiles, replace=False)
                 x = x_temp[idx]
@@ -170,9 +210,23 @@ class SignaturetDataset:
         self,
         labels: pd.Series,
         use_cross_val: bool = True,
-        # use_multicentric: bool = False,
     ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
-        """Compute cross validation split for the dataset. Uses GroupKFold to ensure that the same patient is not present in both the train and validation set."""
+        """Compute cross validation split for the dataset. Uses GroupKFold to ensure that the same patient is not present in both the train and validation set.
+        
+        Parameters
+        ----------
+        labels : pd.Series
+            Series containing the labels of the dataset. The index must be the patient ids.
+        use_cross_val : bool, default=True
+            If True, use cross validation. If False, the train and validation set will be the same.
+            
+        Returns
+        -------
+        cv_train_ids : Dict[str, np.ndarray]
+            Dictionary containing the indices of the training set for each split
+        cv_val_ids : Dict[str, np.ndarray]
+            Dictionary containing the indices of the validation set for each split    
+        """
 
         groups = labels.index.values
         cv_train_ids, cv_val_ids = {}, {}
@@ -180,16 +234,6 @@ class SignaturetDataset:
             cv_train_ids["split_0"] = labels.index.values
             cv_val_ids["split_0"] = labels.index.values
             return cv_train_ids, cv_val_ids
-
-        # if use_multicentric:
-        # # basically get training as DISC and validation as BJN_U
-        #     df_disc = self.df[self.df.cohort == "DISC"]
-        #     df_bjn_u = self.df[self.df.cohort == "BJN_U"]
-        #     train_idx = labels.index.isin(df_disc.patient_ID)
-        #     val_idx = labels.index.isin(df_bjn_u.patient_ID)
-        #     cv_train_ids["split_0"] = labels.index[train_idx].values.squeeze()
-        #     cv_val_ids["split_0"] = labels.index[val_idx].values.squeeze()
-        #     return cv_train_ids, cv_val_ids
 
         gkf = GroupKFold(n_splits=5)
         for i, (train_idx, val_idx) in enumerate(gkf.split(labels, labels, groups)):
@@ -199,10 +243,27 @@ class SignaturetDataset:
         return cv_train_ids, cv_val_ids
 
     def _process_row(self, row, n_tiles):
+        """
+        Process a row of the dataframe to get the features and annotations of the tiles.
+
+        Parameters
+        ----------
+        row : pd.Series
+            Row of the dataframe. Must contain the columns `sample_ID`.
+
+        Returns
+        -------
+        features : np.ndarray
+            Features of the tiles
+        annotations : np.ndarray
+            Annotations of the tiles
+        ids : list
+            List of the patient ids
+        """
         path_coord = self.PATH_TUM_ANNOT / row["sample_ID"] / "tiles_coord.npy"
         path_feat = self.PATH_FEATURES_DIR / row["sample_ID"] / "features.npy"
 
-        coord = np.load(path_coord, allow_pickle=True).astype(int)[:, [0, 2, 3, 4]]
+        coord = np.load(path_coord, allow_pickle=True).astype(int)[:, [0, 2, 3, 4]] # z,x,y,tum
         features = np.load(path_feat, allow_pickle=True, mmap_mode="r").astype(np.float32)
 
         # sample the data
@@ -211,9 +272,9 @@ class SignaturetDataset:
                 f"Warning: {row['sample_ID']} has less than {n_tiles} tiles, only {len(features)} tiles will be used."
             )
         else:
-            # sampled_idx = np.random.choice(features.shape[0], n_tiles, replace=False)
-            # features = features[sampled_idx]
-            features = features[:, :n_tiles]
+            sampled_idx = np.random.choice(features.shape[0], n_tiles, replace=False)
+            features = features[sampled_idx]
+            # features = features[:, :n_tiles]
 
         mapped_feat, mapped_annot, mapped_ids = [], [], []
         for feat in features:
@@ -224,7 +285,7 @@ class SignaturetDataset:
                 raise ValueError
             else:
                 mapped_feat.append(feat[3:])
-                mapped_annot.append(coord[idx, 3])
+                mapped_annot.append(coord[idx, 3]) # Ensures that the annotation is correctly mapped to the feature
                 mapped_ids.append(row["sample_ID"])
 
         if len(mapped_feat) == 0:
@@ -232,7 +293,7 @@ class SignaturetDataset:
         else:
             return np.array(mapped_feat), np.concatenate(mapped_annot, 0), mapped_ids
 
-    def get_rows_datas(self, rows, n_tiles, njobs=4):
+    def _get_rows_datas(self, rows, n_tiles, njobs=4):
         X, y, ids = [], [], []
         results = Parallel(n_jobs=njobs)(
             delayed(self._process_row)(row, n_tiles)
@@ -249,8 +310,8 @@ class SignaturetDataset:
     def get_data_tumors(self, n_tiles, njobs=4):
         """
         Get the data for the tumors segmentation task.
-        We assume that the training data are given by the rows of the dataframe df whose cohort
-        is `DISC` and the validation data are given by the rows of the dataframe df whose cohort
+        We assume that the training data are given by the rows of the dataframe whose cohort
+        is `DISC` and the validation data are given by the rows of the dataframe whose cohort
         is `BJN_U`.
 
         Parameters
@@ -278,7 +339,7 @@ class SignaturetDataset:
         rows_train = self.df[self.df.cohort == "DISC"]
         rows_val = self.df[self.df.cohort == "BJN_U"]
 
-        X_train, y_train, ids_train = self.get_rows_datas(rows_train, n_tiles, njobs)
-        X_val, y_val, ids_val = self.get_rows_datas(rows_val, n_tiles, njobs)
+        X_train, y_train, ids_train = self._get_rows_datas(rows_train, n_tiles, njobs)
+        X_val, y_val, ids_val = self._get_rows_datas(rows_val, n_tiles, njobs)
 
         return X_train, y_train, ids_train, X_val, y_val, ids_val
