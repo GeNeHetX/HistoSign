@@ -65,6 +65,12 @@ def parse_args():
         choices=["vit", "cnn", "ctrans"],
     )
     parser.add_argument(
+        "--path_ctranspath",
+        type=Path,
+        default=Path(r"C:\Users\inserm\Documents\histo_sign\ctranspath.pth"),
+        help="Path to the pretrained ctranspath model",
+    )
+    parser.add_argument(
         "--batch_size",
         type=int,
         default=512,
@@ -247,10 +253,10 @@ def resnet50_special(pretrained, progress, key, **kwargs):
     return model
 
 
-def get_ctranspath():
+def get_ctranspath(model_path):
     model = ctranspath()
     model.head = torch.nn.Identity()
-    td = torch.load(r"C:\Users\inserm\Documents\histo_sign\ctranspath.pth")
+    td = torch.load(model_path)
     model.load_state_dict(td["model"], strict=True)
     return model
 
@@ -319,7 +325,7 @@ if __name__ == "__main__":
         model = resnet50_special(pretrained=True, progress=True, key="BT").to(device)
         key_trans = "bt"
     elif args.model == "ctrans":
-        model = get_ctranspath().to(device)
+        model = get_ctranspath(args.path_ctranspath).to(device)
         key_trans = "imagenet"
     else:
         raise ValueError(f"Model not recognized: {args.model}")
