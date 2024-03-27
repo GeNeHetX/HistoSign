@@ -59,13 +59,6 @@ def parse_arg():
         default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\panc_summary_vst.csv"),
         help="Path to the summary data",
     )
-    parser.add_argument(
-        "--coords",
-        type=Path,
-        default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\non_white_coordinates_panc_224"),
-        help="Path to the coordinates",
-    )
-
     return parser.parse_args()
 
 
