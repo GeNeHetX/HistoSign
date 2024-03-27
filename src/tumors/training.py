@@ -56,6 +56,12 @@ def save_splits(export_path, train_ids_cv, val_ids_cv):
         f.write("train_patient = " + str(train_patient) + "\n")
         f.write("val_patient = " + str(val_patient) + "\n")
 
+def exists_files(export_path_folder):
+    x_train = (export_path_folder / "X_train_panc.npy").exists()
+    y_train = (export_path_folder / "y_train_panc.npy").exists()
+    x_val = (export_path_folder / "X_val_panc.npy").exists()
+    y_val = (export_path_folder / "y_val_panc.npy").exists()
+    return x_train and y_train and x_val and y_val
 
 def main():
 
@@ -71,13 +77,15 @@ def main():
     )
 
     print("Loading data...")
-    # X_train, y_train, ids_train, X_val, y_val, ids_val = dataset.get_data_tumors(n_tiles=PARAMS["n_tiles"])
-    # save_splits(export_path, ids_train, ids_val)
+    if not exists_files(export_path_folder):
+        # The extraction can be a bit long, this is just to save time
+        X_train, y_train, ids_train, X_val, y_val, ids_val = dataset.get_data_tumors(n_tiles=PARAMS["n_tiles"])
+        save_splits(export_path, ids_train, ids_val)
 
-    # np.save(export_path_folder / "X_train_panc.npy", X_train)
-    # np.save(export_path_folder / "y_train_panc.npy", y_train)
-    # np.save(export_path_folder / "X_val_panc.npy", X_val)
-    # np.save(export_path_folder / "y_val_panc.npy", y_val)
+        np.save(export_path_folder / "X_train_panc.npy", X_train)
+        np.save(export_path_folder / "y_train_panc.npy", y_train)
+        np.save(export_path_folder / "X_val_panc.npy", X_val)
+        np.save(export_path_folder / "y_val_panc.npy", y_val)
 
     X_train = np.load(export_path_folder / "X_train_panc.npy")
     y_train = np.load(export_path_folder / "y_train_panc.npy")
