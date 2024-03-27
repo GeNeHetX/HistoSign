@@ -28,25 +28,14 @@ def train(
     if params["use_cross_val"]:
         assert len(set(X_ids_train).intersection(X_ids_val)) == 0
 
-    # y_train = y.loc[X_ids_train].values.squeeze()
-    # y_val = y.loc[X_ids_val].values.squeeze()
-
-    y_train = y.loc[np.unique(X_ids_train)].values  # .squeeze()
-    y_val = y.loc[np.unique(X_ids_val)].values  # .squeeze()
+    y_train = y.loc[np.unique(X_ids_train)].values
+    y_val = y.loc[np.unique(X_ids_val)].values
 
     train_set = TensorDataset(torch.tensor(idx_train), torch.tensor(y_train, dtype=torch.float32))
     val_set = TensorDataset(torch.tensor(idx_val), torch.tensor(y_val, dtype=torch.float32))
 
     criterion = torch.nn.MSELoss()
 
-    # model = Weldon(
-    #     # in_features=2048,
-    #     # out_features=4,
-    #     in_features=X.shape[2],
-    #     out_features=y.shape[1],
-    #     n_extreme=100,
-    #     tiles_mlp_hidden=[128],
-    # )
     model = DeepMIL(
         in_features=X.shape[2],
         out_features=y.shape[1],

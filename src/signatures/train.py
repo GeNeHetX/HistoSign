@@ -19,20 +19,13 @@ def parse_args():
         "--summary_data",
         type=Path,
         default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\mdn_summary_vst.csv"),
-        help="Path to the summary dataframe",
+        help="Path to the summary dataframe. See SignaturetDataset class for requirements to the file",
     )
     parser.add_argument(
         "--features_dir",
         type=Path,
         default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\features_mdn_224_ctranspath"),
         help="Path to the directory containing the extracted features of the WSI",
-    )
-    parser.add_argument(
-        "--col_signs",
-        type=Path,
-        # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\selected_col_names.txt"),
-        default=None,
-        help="Path to the file containing the names of the columns to predict",
     )
     parser.add_argument(
         "--return_sign",
@@ -44,6 +37,13 @@ def parse_args():
         If short, predicts Classic and Basal. \
         If normal, predicts Classic, StromaActiv, Basal, StromaInactive. \
         If custom, predicts the column given by the col_name argument.",
+    )
+    parser.add_argument(
+        "--col_signs",
+        type=Path,
+        # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\selected_col_names.txt"),
+        default=None,
+        help="Path to the file containing the names of the columns to predict",
     )
     parser.add_argument(
         "--col_name",
@@ -62,7 +62,7 @@ def parse_args():
         "--batch_size",
         type=int,
         default=32,
-        help="Batch size for the feature extraction",
+        help="Batch size for the training",
     )
     parser.add_argument(
         "--n_ep",
@@ -77,16 +77,22 @@ def parse_args():
         help="Learning rate for the training",
     )
     parser.add_argument(
+        "--wd",
+        type=float,
+        default=5e-4,
+        help="Weight decay for the optimizer",
+    )
+    parser.add_argument(
         "--n_tiles",
         type=int,
-        default=64,
+        default=8_000,
         help="Number of tiles to use",
     )
     parser.add_argument(
         "--use_cross_val",
         action="store_true",
         default=True,
-        help="Whether to use cross-validation",
+        help="Whether to use cross-validation. If False, uses train and val data will be the same.",
     )
     parser.add_argument(
         "--n_workers",
@@ -94,40 +100,8 @@ def parse_args():
         default=0,
         help="Number of workers for data loading",
     )
-    parser.add_argument(
-        "--wd",
-        type=float,
-        default=5e-4,
-        help="Weight decay for the optimizer",
-    )
 
     return parser.parse_args()
-
-
-# export_path = Path(r"C:\Users\inserm\Documents\histo_sign\trainings")
-# export_path = export_path / "signatures" / str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-# export_path.mkdir(parents=True, exist_ok=True)
-# print("Saving results at \n", export_path, "\n")
-
-# PARAMS = {
-#     "batch_size": 32,
-#     "n_ep": 100,
-#     "lr": 5.0e-4,
-#     "n_tiles": 64,
-#     "return_sign": "long",
-#     "use_cross_val": True,
-#     "n_workers": 0,
-#     "wd": 5e-4,
-# }
-
-
-# # PATH_FEATURES_DIR = Path(r"C:\Users\inserm\Documents\histo_sign\dataset\features_mdn_512_vit")
-# PATH_FEATURES_DIR = Path(r"C:\Users\inserm\Documents\histo_sign\dataset\features_mdn_224_ctranspath")
-# PATH_SUMMARY_DATA = Path(r"C:\Users\inserm\Documents\histo_sign\dataset\mdn_summary_vst.csv")
-# # PATH_COL_SIGNS = Path(r"C:\Users\inserm\Documents\histo_sign\dataset\col_names.txt")
-# PATH_COL_SIGNS = Path(r"C:\Users\inserm\Documents\histo_sign\dataset\new_col_names.txt")
-# # PATH_COL_SIGNS = None
-
 
 def save_params(PARAMS, PATH_SUMMARY_DATA, PATH_FEATURES_DIR, PATH_COL_SIGNS, col_name, export_path):
     with open(export_path / "params.txt", "w", encoding="utf-8") as f:

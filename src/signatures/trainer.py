@@ -2,7 +2,6 @@ from typing import Tuple
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_auc_score
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
