@@ -103,6 +103,7 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def save_params(PARAMS, PATH_SUMMARY_DATA, PATH_FEATURES_DIR, PATH_COL_SIGNS, col_name, export_path):
     with open(export_path / "params.txt", "w", encoding="utf-8") as f:
         f.write("PARAMS = " + str(PARAMS) + "\n")
@@ -138,8 +139,9 @@ def main(PARAMS, PATH_SUMMARY_DATA, PATH_FEATURES_DIR, PATH_COL_SIGNS, col_name,
     # Train
     print("\n Starting training... \n")
     val_corrs = {comp: [] for comp in y.columns}
+    train_corrs = {comp: [] for comp in y.columns}
     for i, split in enumerate(train_ids_cv):
-        val_preds, val_corrs_, model = train(
+        val_preds, val_corrs_, model, train_corr = train(
             X=X,
             X_ids=X_ids,
             y=y,
@@ -149,8 +151,11 @@ def main(PARAMS, PATH_SUMMARY_DATA, PATH_FEATURES_DIR, PATH_COL_SIGNS, col_name,
             device="cuda:0",
         )
         for comp in val_corrs_:
-            print(f"Split {i}, {comp} component: corr={val_corrs_[comp]:.3f}")
+            print(
+                f"Split {i}, {comp} component: val_corr={val_corrs_[comp]:.3f}, train_corr={train_corr[comp]:.3f}"
+            )
             val_corrs[comp].append(val_corrs_[comp])
+            train_corrs[comp].append(train_corr[comp])
 
         # break
 
@@ -159,9 +164,11 @@ def main(PARAMS, PATH_SUMMARY_DATA, PATH_FEATURES_DIR, PATH_COL_SIGNS, col_name,
         export_folder.mkdir(parents=True, exist_ok=True)
         torch.save(model.state_dict(), export_folder / "model.pth")
         np.save(export_folder / "val_corrs.npy", val_corrs_)
+        np.save(export_folder / "train_corrs.npy", train_corr)
 
     for comp in val_corrs:
         print(f"{comp}: Mean corr={np.mean(val_corrs[comp]):.3f}")
+        print(f"{comp}: Mean train corr={np.mean(train_corrs[comp]):.3f}")
 
     print(f"Done in {timedelta(seconds=time()-start_time)}")
 

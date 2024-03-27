@@ -45,7 +45,7 @@ def train(
         tiles_mlp_hidden=[128],
     )
 
-    val_preds, val_corrs, model = trainer(
+    val_preds, val_corrs, model, train_corr = trainer(
         model=model,
         criterion=criterion,
         X=X,
@@ -57,4 +57,4 @@ def train(
         target_names=y.columns.tolist(),
     )
 
-    return val_preds, val_corrs, model
+    return val_preds, val_corrs, model, train_corr

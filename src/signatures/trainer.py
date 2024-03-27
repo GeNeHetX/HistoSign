@@ -107,7 +107,7 @@ def trainer(
         mean_train_corr = np.mean(list(train_corr.values()))
 
     pbar.close()
-    return val_preds, val_corr, model
+    return val_preds, val_corr, model, train_corr
 
 
 def eval(
