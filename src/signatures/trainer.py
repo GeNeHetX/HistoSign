@@ -7,6 +7,10 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 from scipy.stats import pearsonr
 from typing import List, Tuple
+import warnings
+from scipy.stats import ConstantInputWarning
+
+warnings.filterwarnings("ignore", category=ConstantInputWarning)
 
 
 def trainer(
@@ -48,7 +52,7 @@ def trainer(
 
         pbar.reset()
         pbar.set_description(
-            f"Epoch[{epoch}]: val_loss: {val_loss:.2f}, val_corr: {mean_val_corr:.2f}"
+            f"Epoch[{epoch}]: val_loss: {val_loss:.2f}, val_corr: {mean_val_corr:.2f}, "
             f"train_corr: {mean_train_corr:.2f}, loss_train: {loss_train.get():.2f}",
         )
 
@@ -76,7 +80,7 @@ def trainer(
 
             loss_train.update(loss.cpu().detach().numpy())
             pbar.set_description(
-                f"Epoch[{epoch}]: val_loss : {val_loss:.2f}, val_corr: {mean_val_corr:.2f}, "
+                f"Epoch[{epoch}]: val_loss: {val_loss:.2f}, val_corr: {mean_val_corr:.2f}, "
                 f"train_corr: {mean_train_corr:.2f}, loss_train: {loss_train.get():.2f}",
                 refresh=True,
             )
@@ -159,6 +163,11 @@ def eval(
             preds = preds.groupby(preds.index).mean()
         corrs = {}
         for t in target_names:
+            # if is constant raise
+            # if preds[f"label_{t}"].std() == 0:
+            #     raise ValueError(f"Target {t} is constant" + str(preds[f"label_{t}"]))
+            # if preds[f"pred_{t}"].std() == 0:
+            #     raise ValueError(f"Prediction {t} is constant " + str(preds[f"pred_{t}"]))
             corr, _ = pearsonr(preds[f"label_{t}"], preds[f"pred_{t}"])
             corrs[t] = corr
 
