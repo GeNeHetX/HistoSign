@@ -1,5 +1,6 @@
 $startTime = Get-Date
 $hyperparameters = @(
+    @{learning_rate=0.0001; weight_decay=0},
     @{learning_rate=0.0001; weight_decay=0.0001},
     @{learning_rate=0.0001; weight_decay=0.001},
     @{learning_rate=0.0001; weight_decay=0.01},
@@ -9,7 +10,6 @@ $hyperparameters = @(
     @{learning_rate=0.001; weight_decay=0.001},
     @{learning_rate=0.001; weight_decay=0.01},
     @{learning_rate=0.001; weight_decay=0.1},
-    @{learning_rate=0.0001; weight_decay=0},
     @{learning_rate=0.01; weight_decay=0},
     @{learning_rate=0.01; weight_decay=0.0001},
     @{learning_rate=0.01; weight_decay=0.001},

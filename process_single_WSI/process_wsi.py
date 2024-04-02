@@ -27,14 +27,16 @@ def parse_arg():
     parser.add_argument(
         "--wsi",
         type=Path,
-        default=Path(r"D:\PACPaint_homemade\datasets\BJN_U\364842-06.svs"),
+        # default=Path(r"D:\PACPaint_homemade\datasets\BJN_U\364842-06.svs"),
+        default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\MDN\552138-25_MDNF02_HES.svs"),
+        # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\PRODIGE_24\14AG02095-32_HES.svs"),
         help="Path to the WSI. Can be a .svs, .ndpi, .qptiff",
     )
     parser.add_argument(
         "--model_sign_path",
         type=Path,
-        # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\best_model_path.npy"),
-        default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\classic_basal_model_path.npy"),
+        default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\best_model_path.npy"),
+        # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\classic_basal_model_path.npy"),
         # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\hwang_model_path.npy"),
         # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\all_model_path.npy"),
         help="Path the file containing a dictionary whose keys are the class names and the values are the paths to the models",
