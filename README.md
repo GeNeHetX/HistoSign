@@ -48,4 +48,21 @@ In order to perform inference on the whole dataset, we use the script `src/infer
 
 In order to perform inference, we use the script `process_single_WSI/process_wsi.py` to process a single WSI. It will extract the tiles, extract the features, and then use the trained models to predict the signature and the tumor zone. The results are then saved in a csv file and an interactive visualization is available through the script `process_single_WSI/display_wsi.py`.
 
+## Add a new cohort for validation
+
+In order the validate the models, one can add a new validation cohort. Ideally, the cohort should have been sequenced from microdissected regions so as to have the best spatial match between histology and RNA signatures.
+
+The cohort should be strctured as follow. First, all scans must be in the same folder with appropriate names. Then the signatures must have already been extractred and computed using **vst normalization**. There must be a csv file with the following columns :
+
+- `patient_id` : the identifier of the patient
+- `sample_id` : the identifier of the sample
+- `ID_scan` : the identifier of the scan
+- `path_svs` : the path to the WSI (need not to be an *svs* file)
+- `path_annotation` : the path to the annotation file (if available)
+- `signatures*` : the signatures. The columns must be named accordingly to the signatures.
+
+For example, for a scan with multiple regions annotated, the patient_id and ID_scan will be the same but the sample_id will be different, and so will the signatures.
+
+Then the data can be processed using the same steps as the initial data processing. The scripts `filter_whites_multiscale.py` can be used to extract the tiles, and then `data_processing/extract_annotations.py` or `data_processing/extract_annotations_panc_.py` can be used to extract the annotations. Finally the features can be extracted using `feature_extraction.py`. Then it is only a matter of using the trained models to predict the signature and the tumor zone with the scripts `src/inference/inference_cohort.py`.
+
 - @author: [Théau Blanchard](https://github.com/Theaublanchard)
