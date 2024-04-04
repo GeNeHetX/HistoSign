@@ -13,7 +13,7 @@ pip install -r requirements.txt
 pip install timm-0.5.4.tar
 ```
 
-To get the weights of the base model follow the instruction at [this link](https://github.com/Xiyue-Wang/TransPath/tree/main?tab=readme-ov-file).
+To get the weights of the base model follow the instruction at [this link](https://github.com/Xiyue-Wang/TransPath/tree/main?tab=readme-ov-file) [or here](https://drive.google.com/file/d/1DoDx_70_TLj98gTf6YTXnu4tFhsFocDX/view).
 
 ## Initial Data processing
 
