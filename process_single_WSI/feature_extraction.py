@@ -63,6 +63,12 @@ def parse_args():
         choices=["vit", "cnn", "ctrans"],
     )
     parser.add_argument(
+        "--model_path",
+        type=Path,
+        default= Path(r"C:\Users\inserm\Documents\histo_sign\ctranspath.pth"),
+        help="Path to the model's weights if ctranspath is chosen",
+    )
+    parser.add_argument(
         "--batch_size",
         type=int,
         default=512,
@@ -245,10 +251,10 @@ def resnet50_special(pretrained, progress, key, **kwargs):
     return model
 
 
-def get_ctranspath():
+def get_ctranspath(model_path):
     model = ctranspath()
     model.head = torch.nn.Identity()
-    td = torch.load(r"C:\Users\inserm\Documents\histo_sign\ctranspath.pth")
+    td = torch.load(model_path)
     model.load_state_dict(td["model"], strict=True)
     return model
 
@@ -264,6 +270,7 @@ def extract_features(
     prefetch_factor: int = None,
     save_folder: Path = None,
     filename: str = "features.npy",
+    model_path: Path = None,
 ):
     assert (
         tiles_coords_path is not None or tiles_coords is not None
@@ -282,7 +289,7 @@ def extract_features(
         key_trans = "bt"
     elif model_key == "ctrans":
         # model = ctranspath().to(device)
-        model = get_ctranspath().to(device)
+        model = get_ctranspath(model_path).to(device)
         key_trans = "imagenet"
     else:
         raise ValueError(f"Model not recognized got : {model_key}. Expected 'vit', 'cnn' or 'ctrans'")

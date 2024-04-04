@@ -4,6 +4,17 @@
 
 This project aims at predicting genomic signatures and tumor zones from HES slides. The models are trained on microdissected samples and then valided on two cohort of punched samples.
 
+## Installation
+
+Install the requirements in a virtual environment using the following command :
+
+```bash
+pip install -r requirements.txt
+pip install timm-0.5.4.tar
+```
+
+To get the weights of the base model follow the instruction at [this link](https://github.com/Xiyue-Wang/TransPath/tree/main?tab=readme-ov-file).
+
 ## Initial Data processing
 
 ### Data aggregation

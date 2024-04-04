@@ -33,6 +33,12 @@ def parse_arg():
         help="Path to the WSI. Can be a .svs, .ndpi, .qptiff",
     )
     parser.add_argument(
+        "--ctranspath",
+        type=Path,
+        default = Path(r"C:\Users\inserm\Documents\histo_sign\ctranspath.pth"),
+        help="Path to the ctrans model",
+    )
+    parser.add_argument(
         "--model_sign_path",
         type=Path,
         default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\best_model_path.npy"),
@@ -85,6 +91,7 @@ def main(args):
             num_workers=args.num_workers,
             save_folder=args.temp_dir,
             batch_size=args.batch_size,
+            model_path=args.ctranspath,
         )
     features = np.load(args.temp_dir / slidename / "features.npy")
 
