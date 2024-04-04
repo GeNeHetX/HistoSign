@@ -1,5 +1,9 @@
 # Prediction of tumor zones and genomic signatures from HES slide
 
+![display_interface](images/display_example.png)
+
+This project aims at predicting genomic signatures and tumor zones from HES slides. The models are trained on microdissected samples and then valided on two cohort of punched samples.
+
 ## Initial Data processing
 
 ### Data aggregation
@@ -64,5 +68,11 @@ The cohort should be strctured as follow. First, all scans must be in the same f
 For example, for a scan with multiple regions annotated, the patient_id and ID_scan will be the same but the sample_id will be different, and so will the signatures.
 
 Then the data can be processed using the same steps as the initial data processing. The scripts `filter_whites_multiscale.py` can be used to extract the tiles, and then `data_processing/extract_annotations.py` or `data_processing/extract_annotations_panc_.py` can be used to extract the annotations. Finally the features can be extracted using `feature_extraction.py`. Then it is only a matter of using the trained models to predict the signature and the tumor zone with the scripts `src/inference/inference_cohort.py`.
+
+## Results
+
+![training_results](images/training_results.png)
+![validation_results_p24_wsi](images/validation_results_p24_wsi.png)
+![validation_results_multicentric_wsi](images/validation_results_multicentric_wsi.png)
 
 - @author: [Théau Blanchard](https://github.com/Theaublanchard)

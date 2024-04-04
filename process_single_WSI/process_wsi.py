@@ -28,8 +28,8 @@ def parse_arg():
         "--wsi",
         type=Path,
         # default=Path(r"D:\PACPaint_homemade\datasets\BJN_U\364842-06.svs"),
-        default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\MDN\552138-25_MDNF02_HES.svs"),
-        # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\PRODIGE_24\14AG02095-32_HES.svs"),
+        # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\MDN\552138-25_MDNF02_HES.svs"),
+        default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\PRODIGE_24\14AG02095-32_HES.svs"),
         help="Path to the WSI. Can be a .svs, .ndpi, .qptiff",
     )
     parser.add_argument(
