@@ -78,7 +78,7 @@ def main(args):
     print("Filtering white tiles...")
 
     tiles_coord, coord_thumb, final_mask, img = filter_whites(
-        args.wsi, tile_size=224, folder_path=args.temp_dir
+        str(args.wsi), tile_size=224, folder_path=args.temp_dir
     )
 
     print("Extracting features...")
