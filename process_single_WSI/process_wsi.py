@@ -41,7 +41,7 @@ def parse_arg():
     parser.add_argument(
         "--model_sign_path",
         type=Path,
-        default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\best_model_path.npy"),
+        default=Path(r"dataset\best_model_path.npy"),
         # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\classic_basal_model_path.npy"),
         # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\hwang_model_path.npy"),
         # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\all_model_path.npy"),
@@ -50,7 +50,7 @@ def parse_arg():
     parser.add_argument(
         "--model_tum_path",
         type=Path,
-        default=Path(r"C:\Users\inserm\Documents\histo_sign\trainings\tumors\2024-03-25_14-43-57\model.pth"),
+        default=Path(r"dataset\model_tum_seg.pth"),
         help="Path to the tumor model",
     )
     parser.add_argument(
