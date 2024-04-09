@@ -6,15 +6,36 @@ This project aims at predicting genomic signatures and tumor zones from HES slid
 
 ## Installation
 
-Install the requirements in a virtual environment using the following command :
+Install the requirements in a virtual environment.
+First install [OpenSlide](https://openslide.org/download/#binaries). Using a linux distribution is recommended. Else modify the paths to your OpenSlide installation in the file `process_single_WSI/feature_extraction.py`.
+Then install the requirements using the following commands :
 
 ```bash
 pip install -r requirements.txt
 pip install timm-0.5.4.tar
 ```
-Also install [OpenSlide](https://openslide.org/download/#binaries)
 
 To get the weights of the base model follow the instruction at [this link](https://github.com/Xiyue-Wang/TransPath/tree/main?tab=readme-ov-file) [or here](https://drive.google.com/file/d/1DoDx_70_TLj98gTf6YTXnu4tFhsFocDX/view).
+
+## Process a single WSI
+
+To process a single WSI, use the script `/process_single_wsi/process_wsi.py`. The script will extract the tiles, extract the features, and then use the trained models to predict the signature and the tumor zone. The results are then saved in csv files and an interactive visualization is available through the script `/process_single_wsi/display_wsi.py`.
+
+```bash
+python process_single_wsi/process_wsi.py --temp_dir <path_to_temp_dir> --wsi <path_to_wsi> --ctranspath <path_to_ctranspath> --model_sign_path <path_to_model_sign> --model_tum_path <path_to_model_tum> --device <device> --batch_size <batch_size> --num_workers <num_workers> --display
+```
+
+Where :
+
+- `<path_to_temp_dir>` is the path to the temporary directory where the results will be saved
+- `<path_to_wsi>` is the path to the WSI. Can be a .svs, .ndpi, .qptiff
+- `<path_to_ctranspath>` is the path to the ctrans model downloaded during installation
+- `<path_to_model_sign>` is the path to the text file containing the signature names to be predicted. Default is `dataset/best_sign.txt`
+- `<path_to_model_tum>` is the path to the tumor model. Default is `dataset/model_tum_seg.pth`
+- `<device>` is the device to use for the predictions. Default is `cuda:0`
+- `<batch_size>` is the batch size for the feature extraction. Default is `512`
+- `<num_workers>` is the number of workers for the feature extraction. Set to 0 if using windows. Default is `0`
+- `--display` is a flag to display the WSI and the tiles.
 
 ## Initial Data processing
 
