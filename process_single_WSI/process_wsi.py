@@ -35,17 +35,18 @@ def parse_arg():
     parser.add_argument(
         "--ctranspath",
         type=Path,
-        default = Path(r"C:\Users\inserm\Documents\histo_sign\ctranspath.pth"),
+        default=Path(r"C:\Users\inserm\Documents\histo_sign\ctranspath.pth"),
         help="Path to the ctrans model",
     )
     parser.add_argument(
         "--model_sign_path",
         type=Path,
-        default=Path(r"dataset\best_model_path.npy"),
+        default=Path(r"dataset\models"),
         # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\classic_basal_model_path.npy"),
         # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\hwang_model_path.npy"),
         # default=Path(r"C:\Users\inserm\Documents\histo_sign\dataset\all_model_path.npy"),
-        help="Path the file containing a dictionary whose keys are the class names and the values are the paths to the models",
+        # help="Path the file containing a dictionary whose keys are the class names and the values are the paths to the models",
+        help="Path to the folders containing the models, each folder should contain a model.pth file and be named after the class name",
     )
     parser.add_argument(
         "--model_tum_path",
@@ -71,6 +72,13 @@ def parse_arg():
 
     parsed_args = parser.parse_args()
     return parsed_args
+
+
+def get_models_paths(model_sign_path):
+    sign_paths = list(model_sign_path.glob("*"))
+    sign_names = [sign.stem for sign in sign_paths]
+    model_dict = {sign_name: sign_path / "model.pth" for sign_name, sign_path in zip(sign_names, sign_paths)}
+    return model_dict
 
 
 def main(args):
@@ -99,7 +107,8 @@ def main(args):
     x = torch.from_numpy(x).unsqueeze(0).float()
 
     print("Predicting signatures...")
-    model_paths_dict = np.load(args.model_sign_path, allow_pickle=True).item()
+    # model_paths_dict = np.load(args.model_sign_path, allow_pickle=True).item()
+    model_paths_dict = get_models_paths(args.model_sign_path)
 
     df_wsi = pd.DataFrame()
     df_tiles = pd.DataFrame({"z": coord[:, 0], "x": coord[:, 1], "y": coord[:, 2]})
